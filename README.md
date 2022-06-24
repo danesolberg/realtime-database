@@ -13,7 +13,12 @@ https://user-images.githubusercontent.com/25882507/175367472-7a76244f-cc4f-409a-
 
 
 ## TODO
+- Tests
+### Query feature support
 - Add support for joins and aggregate/window functions in SQL queries
 - Add in-memory processing layer to recompute results and send partial results for aggregate functions (count, max, limit, etc)
-- Build out client API beyond current websocket prototype
-- Tests
+### Client library
+- Build out client API beyond current React/websocket prototype
+### Architecture
+- Loosen coupling between functional components. Allow client to write queries in multiple languages (even raw SQL ideally), and create mapper objects to convert between query syntax and backend nested predicate objects.  Allow for alternative db management frameworks beyond SQLAlchemy (support true CDC when available)
+- Define clearer responsibility boundaries and connection interface contracts/guarantees to improve extensibility
