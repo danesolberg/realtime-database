@@ -1,6 +1,7 @@
-from server import query_manager as qm
+from server.query_managers import sqlalchemy as sa
+from server.query_managers import pure_sql as ps
 
-QUERIES = [
+SQLA_QUERIES = [
     ("""session.query(User).where(
         or_(
             User.id>5, 
@@ -20,43 +21,43 @@ QUERIES = [
             )
         )
     )""",
-    qm.Query(
+    sa.Query(
         "placeholder",
         "users",
-        qm.ComplexPredicate(
-            qm.PredicateType.OR,
+        sa.ComplexPredicate(
+            sa.PredicateType.OR,
             [
-                qm.Boolean(
-                    qm.BooleanOperator.GT,
+                sa.Boolean(
+                    sa.BooleanOperator.GT,
                     "id",
                     5
                 ),
-                qm.ComplexPredicate(
-                    qm.PredicateType.AND,
+                sa.ComplexPredicate(
+                    sa.PredicateType.AND,
                     [
-                        qm.Boolean(
-                            qm.BooleanOperator.LT,
+                        sa.Boolean(
+                            sa.BooleanOperator.LT,
                             "id",
                             1000
                         ),
-                        qm.ComplexPredicate(
-                            qm.PredicateType.OR,
+                        sa.ComplexPredicate(
+                            sa.PredicateType.OR,
                             [
-                                qm.Boolean(
-                                    qm.BooleanOperator.EQ,
+                                sa.Boolean(
+                                    sa.BooleanOperator.EQ,
                                     "name",
                                     "Alice"
                                 ),
-                                qm.ComplexPredicate(
-                                    qm.PredicateType.AND,
+                                sa.ComplexPredicate(
+                                    sa.PredicateType.AND,
                                     [
-                                        qm.Boolean(
-                                            qm.BooleanOperator.GT,
+                                        sa.Boolean(
+                                            sa.BooleanOperator.GT,
                                             "age",
                                             10
                                         ),
-                                        qm.Boolean(
-                                            qm.BooleanOperator.EQ,
+                                        sa.Boolean(
+                                            sa.BooleanOperator.EQ,
                                             "name",
                                             "Bob"
                                         )
@@ -66,16 +67,91 @@ QUERIES = [
                         )
                     ]
                 ),
-                qm.ComplexPredicate(
-                    qm.PredicateType.AND,
+                sa.ComplexPredicate(
+                    sa.PredicateType.AND,
                     [
-                        qm.Boolean(
-                            qm.BooleanOperator.EQ,
+                        sa.Boolean(
+                            sa.BooleanOperator.EQ,
                             "age",
                             50
                         ),
-                        qm.Boolean(
-                            qm.BooleanOperator.EQ,
+                        sa.Boolean(
+                            sa.BooleanOperator.EQ,
+                            "name",
+                            "Carol"
+                        )
+                    ]
+                )
+            ]
+        )
+    ))
+]
+
+SQL_QUERIES = [
+    ("""
+        SELECT *
+        FROM users
+        WHERE
+            id > 5
+            or (id < 1000 and (name = 'Alice' or (name = 'Bob' and age > 10)))
+            or (name = 'Carol' and age = 50)
+    """,
+    ps.Query(
+        "placeholder",
+        "users",
+        ps.ComplexPredicate(
+            ps.PredicateType.OR,
+            [
+                ps.Boolean(
+                    ps.BooleanOperator.GT,
+                    "id",
+                    5
+                ),
+                ps.ComplexPredicate(
+                    ps.PredicateType.AND,
+                    [
+                        ps.Boolean(
+                            ps.BooleanOperator.LT,
+                            "id",
+                            1000
+                        ),
+                        ps.ComplexPredicate(
+                            ps.PredicateType.OR,
+                            [
+                                ps.Boolean(
+                                    ps.BooleanOperator.EQ,
+                                    "name",
+                                    "Alice"
+                                ),
+                                ps.ComplexPredicate(
+                                    ps.PredicateType.AND,
+                                    [
+                                        ps.Boolean(
+                                            ps.BooleanOperator.GT,
+                                            "age",
+                                            10
+                                        ),
+                                        ps.Boolean(
+                                            ps.BooleanOperator.EQ,
+                                            "name",
+                                            "Bob"
+                                        )
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
+                ),
+                ps.ComplexPredicate(
+                    ps.PredicateType.AND,
+                    [
+                        ps.Boolean(
+                            ps.BooleanOperator.EQ,
+                            "age",
+                            50
+                        ),
+                        ps.Boolean(
+                            ps.BooleanOperator.EQ,
                             "name",
                             "Carol"
                         )
@@ -128,43 +204,43 @@ SUBSCRIPTIONS = [
             } subs:set()
         }
         """,
-        qm.Query(
+        sa.Query(
             "placeholder",
             "users",
-            qm.ComplexPredicate(
-                qm.PredicateType.OR,
+            sa.ComplexPredicate(
+                sa.PredicateType.OR,
                 [
-                    qm.Boolean(
-                        qm.BooleanOperator.GT,
+                    sa.Boolean(
+                        sa.BooleanOperator.GT,
                         "id",
                         5
                     ),
-                    qm.ComplexPredicate(
-                        qm.PredicateType.AND,
+                    sa.ComplexPredicate(
+                        sa.PredicateType.AND,
                         [
-                            qm.Boolean(
-                                qm.BooleanOperator.LT,
+                            sa.Boolean(
+                                sa.BooleanOperator.LT,
                                 "id",
                                 1000
                             ),
-                            qm.ComplexPredicate(
-                                qm.PredicateType.OR,
+                            sa.ComplexPredicate(
+                                sa.PredicateType.OR,
                                 [
-                                    qm.Boolean(
-                                        qm.BooleanOperator.EQ,
+                                    sa.Boolean(
+                                        sa.BooleanOperator.EQ,
                                         "name",
                                         "Alice"
                                     ),
-                                    qm.ComplexPredicate(
-                                        qm.PredicateType.AND,
+                                    sa.ComplexPredicate(
+                                        sa.PredicateType.AND,
                                         [
-                                            qm.Boolean(
-                                                qm.BooleanOperator.GT,
+                                            sa.Boolean(
+                                                sa.BooleanOperator.GT,
                                                 "age",
                                                 10
                                             ),
-                                            qm.Boolean(
-                                                qm.BooleanOperator.EQ,
+                                            sa.Boolean(
+                                                sa.BooleanOperator.EQ,
                                                 "name",
                                                 "Bob"
                                             )
@@ -174,16 +250,16 @@ SUBSCRIPTIONS = [
                             )
                         ]
                     ),
-                    qm.ComplexPredicate(
-                        qm.PredicateType.AND,
+                    sa.ComplexPredicate(
+                        sa.PredicateType.AND,
                         [
-                            qm.Boolean(
-                                qm.BooleanOperator.EQ,
+                            sa.Boolean(
+                                sa.BooleanOperator.EQ,
                                 "age",
                                 50
                             ),
-                            qm.Boolean(
-                                qm.BooleanOperator.EQ,
+                            sa.Boolean(
+                                sa.BooleanOperator.EQ,
                                 "name",
                                 "Carol"
                             )

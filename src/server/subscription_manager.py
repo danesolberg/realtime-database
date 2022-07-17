@@ -1,9 +1,8 @@
 from collections import namedtuple
 from queue import Queue
 from typing import Dict, Iterable
+from server.query_managers.pure_sql import PureSqlQueryManager
 from server.subscription_tree import SubscriptionsRootNode, TreeNode
-from server.query_manager import QueryManager
-from server.models import Query
 
 
 Event = namedtuple("Event", ["subscriber_sockets", "table", "value"])
@@ -13,18 +12,21 @@ class SubscriptionManager:
         self.db = db
         self.query_ws_map = {}
         self.subscriber_tree = SubscriptionsRootNode()
-        self.query_manager = QueryManager(db)
+        self.query_manager = PureSqlQueryManager()
         self.db_change_queue = Queue()
         self.event_queue = event_queue
 
         self.db._set_queue(self.db_change_queue)
 
     def subscribe(self, ws, query_string: str):
-        query_object = self.query_manager.parse(self.db.eval(query_string))
+        query_object = self.query_manager.parse(query_string)
         # print("inserting query: " + query_string)
-        query_id = self.db.insert(Query(content=query_string), False)
+        query_id = self.db.insert("queries", {"content": query_string})
+        print("id", query_id)
         query_object.id = query_id
         self.subscriber_tree.add_subscription(query_object)
+        print(query_object)
+        print(self.subscriber_tree)
         self.query_ws_map[query_id] = ws
         
 

@@ -1,5 +1,5 @@
 from ranges import Range, RangeDict
-from server.query_manager import SimplePredicate, ComplexPredicate, PredicateType, Boolean, BooleanOperator, Condition
+from server.query_managers.base import SimplePredicate, ComplexPredicate, PredicateType, Boolean, BooleanOperator, Condition
 from copy import copy, deepcopy
 
 
@@ -67,13 +67,13 @@ class SubscriptionsRootNode:
     def _process_boolean(self, rd, bool: Boolean):
         EQ, LT, GT = BooleanOperator
         node = TreeNode()
-        if bool.op is EQ:
+        if bool.op.name == EQ.name:
             created_nodes = rd.insert_range(Range(bool.value, bool.value, include_end=True), node)
             assert created_nodes
-        elif bool.op is LT:
+        elif bool.op.name == LT.name:
             created_nodes = rd.insert_range(Range(end=bool.value, include_end=False), node)
             assert created_nodes
-        elif bool.op is GT:
+        elif bool.op.name == GT.name:
             created_nodes = rd.insert_range(Range(start=bool.value, include_start=False), node)
             assert created_nodes
         else:
@@ -99,7 +99,7 @@ class SubscriptionsRootNode:
                 node.add_sub(query_id)
         elif isinstance(cond, ComplexPredicate):
             nodes = [cur_node]
-            if cond.type is PredicateType.AND:
+            if cond.type.name == PredicateType.AND.name:
                 # need to nest booleans down path of graph
                 # for booleans or predicates in condition
                 for sub_cond in cond.values:
@@ -115,7 +115,7 @@ class SubscriptionsRootNode:
                     created_node.add_sub(query_id)
                 assert created_nodes
                 return created_nodes
-            elif cond.type is PredicateType.OR:
+            elif cond.type.name == PredicateType.OR.name:
                 # keep all booleans at the top level since its OR
                 for sub_cond in cond.values:
                     created_nodes = []
