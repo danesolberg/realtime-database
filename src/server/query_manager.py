@@ -93,7 +93,7 @@ class SimplePredicate(Condition):
         return f"Simple {self.bool}"
 
 
-class QueryManager:
+class SqlAlchemyQueryManager:
     def __init__(self, db):
         self.db = db
 

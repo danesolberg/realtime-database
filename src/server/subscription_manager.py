@@ -2,7 +2,7 @@ from collections import namedtuple
 from queue import Queue
 from typing import Dict, Iterable
 from server.subscription_tree import SubscriptionsRootNode, TreeNode
-from server.query_manager import QueryManager
+from server.query_manager import SqlAlchemyQueryManager
 from server.models import Query
 
 
@@ -13,7 +13,7 @@ class SubscriptionManager:
         self.db = db
         self.query_ws_map = {}
         self.subscriber_tree = SubscriptionsRootNode()
-        self.query_manager = QueryManager(db)
+        self.query_manager = SqlAlchemyQueryManager(db)
         self.db_change_queue = Queue()
         self.event_queue = event_queue
 
