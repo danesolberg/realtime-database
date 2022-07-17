@@ -30,9 +30,10 @@ class WebsocketsServer:
         action = event["action"]
         logger.info(f"Mutate event: {event}")
         # value = json.loads(event["value"])
+        table = event["table"]
         value = event["value"]
         if action == "insert":
-            self.db.insert(value, True)
+            self.db.insert(table, value)
         #TODO implement
         # elif action == "update":
         #     self.db.update(event["id"], value)
@@ -50,6 +51,17 @@ class WebsocketsServer:
             }
         }))
 
+    async def send_schema(self, websocket, event):
+        if event.get("table"):
+            schema = self.db.get_schema(event["table"])
+            await websocket.send(json.dumps({
+                "type": "schema",
+                "data": {
+                    "table": event["table"],
+                    "schema": schema
+                }
+            }))
+
     async def handler(self, websocket):
         async for message in websocket:
             event = json.loads(message)
@@ -58,6 +70,8 @@ class WebsocketsServer:
                 await self.subscribe(websocket, event["data"])
             elif event["type"] == "mutate":
                 await self.mutate(event["data"])
+            elif event["type"] == "get_schema":
+                await self.send_schema(websocket, event["data"])
 
     async def main(self):
         async with websockets.serve(self.handler, "", 8001):

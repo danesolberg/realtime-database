@@ -10,18 +10,21 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import Box from '@mui/material/Box';
 
 
 export default function Home() {
   const [websocket, setWebsocket] = useState(null);
-  // const [query, setQuery] = useState("session.query(User).where(or_(User.id>5, and_(User.id<1000, or_(User.name=='Alice', and_(User.name=='Bob', User.age>10))), and_(User.name=='Carol', User.age==50)))");
-  const [query, setQuery] = useState("session.query(User).where(or_(User.name=='Alice', and_(User.name=='Bob', User.age>10), and_(User.name=='Carol', User.age==50)))");
-
-  const [table, setTable] = useState(null);
+  const [query, setQuery] = useState("SELECT * FROM users WHERE name='Alice' or name='Bob' and age>10 or name='Carol' and age=50");
+  // const [query, setQuery] = useState("session.query(User).where(or_(User.name=='Alice', and_(User.name=='Bob', User.age>10), and_(User.name=='Carol', User.age==50)))");
+  
+  const [table, setTable] = useState("users");
+  const [targetTable, setTargetTable] = useState(null);
+  const [schema, setSchema] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [selectedSub, setSelectedSub] = useState("");
   const [data, setData] = useState({});
-  const [newRow, setNewRow] = useState("User(name='Alice', age=55)");
+  const [newRow, setNewRow] = useState({name: 'Carol', age: 10});
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8001/");
@@ -83,6 +86,9 @@ export default function Home() {
       if (!subscriptions.includes(event.data.query)) {
         setSubscriptions(prevSubscriptions => ([...prevSubscriptions, event.data.query]));
       }
+    } else if (event.type == "schema") {
+      setTargetTable(event.data.table);
+      setSchema(event.data.schema);
     }
   }
 
@@ -105,7 +111,19 @@ export default function Home() {
         type: "mutate",
         data: {
           action: "insert",
+          table: targetTable,
           value: newRow
+        }
+      }));
+    }
+  }
+
+  const getSchema = () => {
+    if (table != null) {
+      websocket.send(JSON.stringify({
+        type: "get_schema",
+        data: {
+          table: table
         }
       }));
     }
@@ -113,10 +131,10 @@ export default function Home() {
 
   const renderList = () => {
     // console.log(data);
-    if (table in data) {
+    if (targetTable in data) {
       return (
         <List>
-          {data[table].map((doc, i) => (
+          {data[targetTable].map((doc, i) => (
             <ListItem key={i} disablePadding>
               <ListItemText primary={JSON.stringify(doc)} />
             </ListItem>
@@ -125,6 +143,40 @@ export default function Home() {
       );
     } else {
       return "no data";
+    }
+  }
+
+  const renderInsertForm = () => {
+    if (schema != null) {
+      const inputs = Object.entries(schema).map(([k, v], i) => (
+        <div key={i}>
+          <TextField
+            label={k}
+            value={newRow[k]}
+            onChange={e => {
+              setNewRow(prevData => ({
+                ...prevData,
+                [k]: e.target.value
+              }));
+            }}
+          />
+        </div>
+      ))
+
+      return (
+        <Box
+          component="form"
+          sx={{
+            '& .MuiTextField-root': { m: 1, width: '25ch' },
+          }}
+          noValidate
+          autoComplete="off"
+        >
+          {inputs}
+        </Box>
+      )
+    } else {
+      return null
     }
   }
 
@@ -162,15 +214,18 @@ export default function Home() {
         
 
         <div style={{ width: "1000px", margin: "25px" }}>
-          {/* <Button variant="contained" onClick={subscribe}>Select</Button> */}
-          <TextField fullWidth id="outlined-basic" label="Enter table to see data for" variant="outlined" onChange={e => setTable(e.target.value)}/>
-          <Button variant="contained" onClick={saveRow}>Save</Button>
-          <TextField fullWidth id="outlined-basic" label="Save new row" variant="outlined" value={newRow} onChange={e => setNewRow(e.target.value)}/>
+          <Button variant="contained" onClick={getSchema}>Enter</Button>
+          <TextField fullWidth id="outlined-basic" label="Select target table for inserts" variant="outlined" value={table} onChange={e => setTable(e.target.value)}/>
+          
+          
+          {/* <TextField fullWidth id="outlined-basic" label="Save new row" variant="outlined" value={newRow} onChange={e => setNewRow(e.target.value)}/> */}
         </div>
 
         <div >
 
         </div>
+        {renderInsertForm()}
+        <Button variant="contained" onClick={saveRow}>Insert</Button>
         {renderList()}
 
       </main>

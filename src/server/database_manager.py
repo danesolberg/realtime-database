@@ -1,7 +1,8 @@
 from queue import Queue
 from typing import Dict
 from uuid import UUID, uuid4
-from sqlalchemy import create_engine, and_, or_, select
+import json
+from sqlalchemy import create_engine, and_, or_, select, inspect
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from server.models import Base, User, Query
@@ -66,30 +67,23 @@ class DatabaseManager:
     def _set_queue(self, queue: Queue):
         self.change_queue = queue
 
-    def insert(self, value: str, deserialize=False):
-        # if table not in self.tables:
-        #     self.tables[table] = Table(table)
-        # table_object = self.tables[table]
-        # document_object = table_object._insert(value)
-        # id = document_object.id
-        # self.documents[id] = document_object
+    def insert(self, tablename: str, value: str):
+        if tablename in Base.TBLNAME_TO_CLASS:
+            sqla_table = Base.TBLNAME_TO_CLASS[tablename]
+            row = sqla_table(**value)
+      
+            logger.info(f"INSERT: {row}")
+            with Session(self.engine) as session, session.begin():
+                session.add(row)
+                session.flush()
+                # print(row)
+                id = row.id
+                table = row.__tablename__
+                session.commit()
 
-        if deserialize:
-            row = self.eval(value)
-        else:
-            row = value
-        logger.info(f"INSERT: {row}")
-        with Session(self.engine) as session, session.begin():
-            session.add(row)
-            session.flush()
-            # print(row)
-            id = row.id
-            table = row.__tablename__
-            session.commit()
+            self._publish(id, table)
 
-        self._publish(id, table)
-
-        return id
+            return id
 
     def get(self, table_name, id):
         table = Base.TBLNAME_TO_CLASS[table_name]
@@ -116,3 +110,6 @@ class DatabaseManager:
     def eval(self, value):
         with Session(self.engine) as session, session.begin():
             return eval(value)
+
+    def get_schema(self, tablename):
+        return {c.key: c.columns[0].type.__visit_name__ for c in inspect(Base.TBLNAME_TO_CLASS[tablename]).attrs}
