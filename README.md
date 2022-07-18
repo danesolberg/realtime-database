@@ -14,7 +14,9 @@ https://user-images.githubusercontent.com/25882507/179568061-03839406-b45e-4f30-
 
 ## TODO
 - Add Tests
-- Expand to full Standard SQL predicate feature set
+- Expand to full Standard SQL query predicate feature set
+- Add support for update and delete mutations
+- Add support for dropping subscriptions
 ### Query feature support
 - Add support for joins and aggregate/window functions in SQL queries
 - Add in-memory processing layer to recompute results and send partial results for aggregate functions (count, max, limit, etc)
